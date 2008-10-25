@@ -26,7 +26,7 @@ end
 
 spec = Gem::Specification.new do |s|
   s.name        = %q{machine}
-  s.version     = "0.0.1"
+  s.version     = "0.1.0"
   s.summary     = %q{machine provides a framework and DSL for defining and
                      using model instance factories.}
   s.description = %q{machine provides a framework and DSL for defining and

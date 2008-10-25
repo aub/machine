@@ -83,12 +83,23 @@ class MachineTest < Test::Unit::TestCase
       end
       assert_equal 'oho', Machine.build(:article).title
     end
-    
-    should "build things that aren't activerecord" do
+  end
+  
+  context "with objects that are not active record" do
+    setup do
       Machine.define :non_model do |nonmodel, factory|
         nonmodel.name = 'hoo'
+      end      
+    end
+
+    should "build the object correctly" do
+      assert_equal 'hoo', Machine.build(:non_model).name      
+    end
+    
+    should "not freak out when calling build! with non-activerecord objects" do
+      assert_nothing_raised do
+        Machine.build!(:non_model).name
       end
-      assert_equal 'hoo', Machine.build(:non_model).name
     end
   end
       
@@ -227,4 +238,14 @@ class MachineTest < Test::Unit::TestCase
       assert @article.new_record?
     end
   end
+  
+  context "group definition" do
+    should "yield a Group instance" do
+      thing = nil
+      Machine.define_group :user do |group|
+        thing = group
+      end
+      assert thing.kind_of?(MachineGroup)
+    end
+  end  
 end

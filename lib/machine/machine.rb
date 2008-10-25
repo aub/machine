@@ -42,6 +42,11 @@ class Machine
     self.machines[name] = Machine.new(name, options, block)
   end
 
+  def self.define_group(name, options={}, &block)
+    group = MachineGroup.new(name, options)
+    yield group
+  end
+
   # Defines a new named sequence. Sequences can be used to set attributes
   # that must be unique. Once a sequence is created it can be applied by
   # calling Machine.next, passing the sequence name.
@@ -70,7 +75,7 @@ class Machine
 
   def self.build!(name, attributes={})
     result = build(name, attributes)
-    result.save!
+    result.save! if result.respond_to?(:save!)
     result
   end
   
@@ -120,3 +125,4 @@ class Machine
     result.compact.reverse
   end
 end
+  

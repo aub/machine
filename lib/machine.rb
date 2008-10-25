@@ -1,5 +1,6 @@
 require 'machine/association_helper'
 require 'machine/machine'
+require 'machine/machine_group'
 require 'machine/sequence'
 
 Machine.find_definitions
