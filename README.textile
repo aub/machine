@@ -8,7 +8,7 @@ Written by "Aubrey Holland":mailto:aubreyholland@gmail.com.
 
 h2. download
 
-Github: "Page":http://github.com/aub/machine/tree/master "Clone":git://github.com/aub/machine.git
+Github: "Page":http://github.com/aub/machine/tree/master
 
 Gem: <pre>gem install aub-machine --source http://gems.github.com</pre>
 
