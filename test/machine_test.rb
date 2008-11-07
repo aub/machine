@@ -27,10 +27,6 @@ class MachineTest < Test::Unit::TestCase
       assert Machine.build(:article).instance_of?(Article)
     end
 
-    should "return nil when trying to build an unregistered machine" do
-      assert_nil Machine.build(:ooh)
-    end
-
     should "build an instance of the provided class" do
       Machine.define :something, :class => Article do
       end
@@ -38,21 +34,21 @@ class MachineTest < Test::Unit::TestCase
     end
 
     should "set default attributes on the built object" do
-      Machine.define :thing, :class => Article do |article, factory|
+      Machine.define :thing, :class => Article do |article, machine|
         article.title = 'aha'
       end
       assert_equal 'aha', Machine.build(:thing).title
     end
 
     should "allow overriding of default attributes" do
-      Machine.define :thing, :class => Article do |article, factory|
+      Machine.define :thing, :class => Article do |article, machine|
         article.title = 'aha'
       end
       assert_equal 'ooooh', Machine.build(:thing, :title => 'ooooh').title    
     end
 
     should "only replace the attributes that are passed" do
-      Machine.define :thing, :class => Article do |article, factory|
+      Machine.define :thing, :class => Article do |article, machine|
         article.title = 'aha'
         article.rating = 123
       end
@@ -60,34 +56,40 @@ class MachineTest < Test::Unit::TestCase
     end
 
     should "not save records with build" do
-      Machine.define :thing, :class => Article do |article, factory|
+      Machine.define :thing, :class => Article do |article, machine|
         article.title = 'aha'
       end
       assert Machine.build(:thing).new_record?    
     end
 
     should "save records with build!" do
-      Machine.define :thing, :class => Article do |article, factory|
+      Machine.define :thing, :class => Article do |article, machine|
         article.title = 'aha'
       end
       assert !Machine.build!(:thing).new_record?
     end
     
     should "allow redefinition of a machine" do
-      Machine.define :article do |article, factory|
+      Machine.define :article do |article, machine|
         article.title = 'aha'
       end
 
-      Machine.define :article do |article, factory|
+      Machine.define :article do |article, machine|
         article.title = 'oho'
       end
       assert_equal 'oho', Machine.build(:article).title
+    end
+    
+    should 'raise an exception when using a machine that doesn\'t exist' do
+      assert_raises MachineNotFoundError do
+        Machine.build(:i_can_has_exception)
+      end
     end
   end
   
   context "with objects that are not active record" do
     setup do
-      Machine.define :non_model do |nonmodel, factory|
+      Machine.define :non_model do |nonmodel, machine|
         nonmodel.name = 'hoo'
       end      
     end
@@ -105,17 +107,17 @@ class MachineTest < Test::Unit::TestCase
       
   context "with associations" do
     setup do
-      Machine.define :publication do |publication, factory|
+      Machine.define :publication do |publication, machine|
         publication.name = 'booya'
       end
       
-      Machine.define :comment do |comment, factory|
+      Machine.define :comment do |comment, machine|
         comment.data = 'dsfsdf'
       end
 
-      Machine.define :article do |article, factory|
-        article.comments = [factory.comment, factory.comment]
-        article.publication = factory.publication
+      Machine.define :article do |article, machine|
+        article.comments = [machine.comment, machine.comment]
+        article.publication = machine.publication
       end
     end
 
@@ -125,8 +127,8 @@ class MachineTest < Test::Unit::TestCase
     end
     
     should "allow passing replacement attributes" do
-      Machine.define :article do |article, factory|
-        article.comments = [factory.comment(:data => 'nice article'), factory.comment(:data => 'bad article')]
+      Machine.define :article do |article, machine|
+        article.comments = [machine.comment(:data => 'nice article'), machine.comment(:data => 'bad article')]
       end
       assert_equal ['nice article', 'bad article'].sort, Machine.build(:article).comments.map { |c| c.data }.sort
     end
@@ -143,12 +145,12 @@ class MachineTest < Test::Unit::TestCase
   
   context "extending existing factories" do
     setup do
-      Machine.define :old_article, :class => Article do |article, factory|
+      Machine.define :old_article, :class => Article do |article, machine|
         article.title = 'old'
         article.rating = 12
       end
       
-      Machine.define :new_article, :class => Article, :extends => :old_article do |article, factory|
+      Machine.define :new_article, :class => Article, :extends => :old_article do |article, machine|
         article.title = 'new'
         article.author = 'Joe Six Pack'
       end
@@ -162,7 +164,7 @@ class MachineTest < Test::Unit::TestCase
     end
     
     should "work properly with multiple layers of extensions" do
-      Machine.define :newer_article, :class => Article, :extends => :new_article do |article, factory|
+      Machine.define :newer_article, :class => Article, :extends => :new_article do |article, machine|
         article.rating = 13
       end
       
@@ -193,7 +195,7 @@ class MachineTest < Test::Unit::TestCase
 
   context "using the helper method" do
     setup do
-      Machine.define :article do |article, factory|
+      Machine.define :article do |article, machine|
         article.title = 'aha'
       end      
     end
@@ -217,7 +219,7 @@ class MachineTest < Test::Unit::TestCase
   
   context "applying a machine to an existing object" do
     setup do
-      Machine.define :article do |article, factory|
+      Machine.define :article do |article, machine|
         article.title = 'aha'
       end
       @article = Article.new(:title => 'old')
@@ -247,5 +249,21 @@ class MachineTest < Test::Unit::TestCase
       end
       assert thing.kind_of?(MachineGroup)
     end
-  end  
+  end
+  
+  context 'using sequences' do
+    setup do
+      Machine.sequence :title do |n|
+        "title-#{n}"
+      end
+      Machine.define :article do |article, machine|
+        article.title = machine.next(:title)
+      end
+    end
+
+    should 'be able to set values using the sequence' do
+      assert_equal 'title-1', Machine(:article).title
+    end
+  end
+  
 end

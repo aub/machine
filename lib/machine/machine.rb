@@ -1,3 +1,5 @@
+class MachineNotFoundError < StandardError; end
+
 class Machine
   
   cattr_accessor :machines #:nodoc:
@@ -38,13 +40,116 @@ class Machine
   #
   # Yields:
   #    The object being created and an association helper
+  #
+  # Example:
+  #
+  #   Machine.define :car do |car, machine|
+  #     car.make = 'GMC'
+  #     car.model = 'S-15'
+  #   end
   def self.define(name, options={}, &block)
     self.machines[name] = Machine.new(name, options, block)
   end
 
+  # Defines a group of machines with a base set of attributes and then a set of
+  # machines as children. This is useful as a namespacing technique or for any
+  # case where you wish to define a set of objects that share a set of base
+  # attributes.
+  #
+  # Arguments:
+  #   name: (Symbol)
+  #     A unique name to identify the group. This name will itself become a machine
+  #     that will build from the base attributes.
+  #   options: (Hash)
+  #     class: (Class) the class that will be used when generating instances for this
+  #            machine. If not specified, the class will be guessed from the 
+  #            machine name.
+  #
+  # Example
+  #
+  #   Machine.define_group :user do |group|
+  #     group.base do |user, machine|
+  #       user.password = 'password'
+  #       user.password_confirmation = 'password'
+  #       user.login = Machine.next(:login)
+  #       user.email = Machine.next(:email)
+  #     end
+  # 
+  #     group.define :super_user do |user, machine|
+  #       user.permissions = [machine.permission(:user => user)]
+  #     end
+  #   end
+  #
+  #   Machine.build(:user)
+  #   Machine.build(:super_user)
+  #
   def self.define_group(name, options={}, &block)
     group = MachineGroup.new(name, options)
     yield group
+  end
+
+  # Creates an unsaved object using the machine with the given name.
+  #
+  # Arguments:
+  #   name: (Symbol)
+  #     The name of the machine to apply.
+  #   attributes: (Hash)
+  #     A set of attributes to use as a replacement for the default ones provided by
+  #     the machine.
+  #
+  # Example
+  #
+  #   Machine.build(:car, :model => 'Civic', :make => 'Honda')
+  def self.build(name, attributes={})
+    machines = machines_for(name)
+    raise MachineNotFoundError if machines.empty?
+    object = machines.shift.build(attributes)
+    while machine = machines.shift
+      machine.apply_to(object, attributes)
+    end
+    object
+  end
+
+  # Creates an saved object using the machine with the given name.
+  #
+  # Arguments:
+  #   name: (Symbol)
+  #     The name of the machine to apply.
+  #   attributes: (Hash)
+  #     A set of attributes to use as a replacement for the default ones provided by
+  #     the machine.
+  #
+  # Example
+  #
+  #   Machine.build!(:car, :model => 'Civic', :make => 'Honda')  
+  def self.build!(name, attributes={})
+    result = build(name, attributes)
+    result.save! if result.respond_to?(:save!)
+    result
+  end
+
+  # Apply the machine with the given name to the provided object. This can
+  # be used to load an existing object with the attributes defined in a machine.
+  #
+  # Arguments:
+  #   name: (Symbol)
+  #     The name of the machine to apply.
+  #   object: (Object)
+  #     The object whose attributes should be set.
+  #   attributes: (Hash)
+  #     A set of replacements attributes for those specified in the machine.
+  #
+  # Example
+  #
+  #   car = Car.new
+  #   Machine.apply_to(:car, car, :model => 'Jetta')
+  def self.apply_to(name, object, attributes={})
+    machines = machines_for(name)
+    return if machines.empty?
+    while machine = machines.shift
+      machine.apply_to(object, attributes)
+    end
+    object    
   end
 
   # Defines a new named sequence. Sequences can be used to set attributes
@@ -59,65 +164,59 @@ class Machine
   #     called with a unique number each time a value in the sequence is to be
   #     generated. The block should return the generated value for the
   #     sequence.
+  #
+  # Example
+  #
+  #   Machine.sequence :street do |n|
+  #     "#{n} Main St."
+  #   end
   def self.sequence(name, &block)
     self.sequences[name] = Sequence.new(block)
   end
-  
-  def self.build(name, attributes={})
-    machines = machines_for(name)
-    return nil if machines.empty?
-    object = machines.shift.build(attributes)
-    while machine = machines.shift
-      machine.apply_to(object, attributes)
-    end
-    object
-  end
 
-  def self.build!(name, attributes={})
-    result = build(name, attributes)
-    result.save! if result.respond_to?(:save!)
-    result
-  end
-  
-  def self.apply_to(name, object, attributes={})
-    machines = machines_for(name)
-    return if machines.empty?
-    while machine = machines.shift
-      machine.apply_to(object, attributes)
-    end
-    object    
-  end
-  
+  # Get the next value produced by the sequence with the given name. This
+  # can be used in machine definitions to fill in attributes that must be
+  # unique.
+  #
+  # Arguments:
+  #   sequence: (Symbol)
+  #     The name of the sequence to use.
+  #
+  # Example
+  #
+  #   Machine.define :address do |address, machine|
+  #     address.street = machine.next(:street)
+  #   end
   def self.next(sequence)
     sequences[sequence].next if sequences.has_key?(sequence)
   end
   
-  def initialize(name, options, proc)
+  def initialize(name, options, proc) #:nodoc
     @name, @options, @proc = name, options, proc
   end
   
-  def extends
+  def extends #:nodoc
     @options[:extends] ? machines[@options[:extends]] : nil
   end
   
-  def build(attributes={})
+  def build(attributes={}) #:nodoc
     object = build_class.new
     apply_to(object, attributes)
     object
   end
 
-  def apply_to(object, attributes={})
+  def apply_to(object, attributes={}) #:nodoc
     @proc.call(object, AssociationHelper.new)
     attributes.each { |key, value| object.send("#{key}=", value) }
   end
 
   protected
   
-  def build_class
+  def build_class #:nodoc
     @options[:class] || @name.to_s.camelize.constantize
   end
   
-  def self.machines_for(name)
+  def self.machines_for(name) #:nodoc
     result = [machines[name]]
     while result.last
       result << result.last.extends
@@ -125,4 +224,3 @@ class Machine
     result.compact.reverse
   end
 end
-  

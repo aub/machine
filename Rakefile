@@ -26,12 +26,9 @@ end
 
 spec = Gem::Specification.new do |s|
   s.name        = %q{machine}
-  s.version     = "0.1.0"
-  s.summary     = %q{machine provides a framework and DSL for defining and
-                     using model instance factories.}
-  s.description = %q{machine provides a framework and DSL for defining and
-                     using factories - less error-prone, more explicit, and 
-                     all-around easier to work with than fixtures.}
+  s.version     = "1.0.0"
+  s.summary     = %q{machine defines a factory system for creating model objects to replace fixtures in Ruby apps.}
+  s.description = %q{machine defines a factory system for creating model objects to replace fixtures in Ruby apps.}
 
   s.files        = FileList['[A-Z]*', 'lib/**/*.rb', 'test/**/*.rb']
   s.require_path = 'lib'

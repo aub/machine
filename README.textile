@@ -1,32 +1,142 @@
-= machine
+h1. machine
 
-* FIX (url)
+Machine is a factory tool designed for a fixture replacement in Rails applications. It borrows a few concepts
+from "factory_girl":http://github.com/thoughtbot/factory_girl/tree/master but applies attributes to objects
+differently and has a different concept for associations.
 
-== DESCRIPTION:
+Written by "Aubrey Holland":mailto:aubreyholland@gmail.com.
 
-FIX (describe your package)
+h2. download
 
-== FEATURES/PROBLEMS:
+Github: "Page":http://github.com/aub/machine/tree/master "Clone":git://github.com/aub/machine.git
 
-* FIX (list of features or problems)
+Gem: <pre>gem install aub-machine --source http://gems.github.com</pre>
 
-== SYNOPSIS:
+Note: if you install using the gem from Github, you'll need this
+in your environment.rb if you want to use Rails 2.1's dependency manager:
 
-  FIX (code sample of usage)
+config.gem "aub-machine",
+           :lib    => "machine",
+           :source => "http://gems.github.com"
 
-== REQUIREMENTS:
+h3. define a machine
 
-* FIX (list of requirements)
+<pre><code>
+Machine.define :car do |car, machine|
+  car.make = 'Ford'
+  car.model = 'Taurus'
+end
+</code></pre>
 
-== INSTALL:
+This defines a factory for building Car objects. The block is yielded an instance of the Car class
+along with a machine object that can be used for building associated objects. Optionally, a class
+name can be provided in cases where the name of the machine is not the same as that of the class.
 
-* FIX (sudo gem install, anything else)
+<pre><code>
+  Machine.define :auto, :class => Car do |auto, machine|
+    ...
+  end
+</code></pre>
 
-== LICENSE:
+Machines can also be extended to any number of levels. When an extended machine is executed, the
+tree will be applied starting from the bottom. This is useful in cases where one machine is a
+specialization of another one.
+
+<pre><code>
+  Machine.define :car do |car, machine|
+    car.make = 'Ford'
+    car.type = 'Car'
+  end
+  
+  Machine.define :station_wagon, :class => Car, :extends => :car do |car, machine|
+    car.type = 'Station Wagon'
+  end
+</code></pre>
+
+In addition, groups of machines can be defined that are built from a set of base attributes.
+This is useful for namespacing similar types.
+
+<pre><code>
+  Machine.define_group :user do |group|
+    group.base do |user, machine|
+      user.password = 'password'
+      user.password_confirmation = 'password'
+      user.status = 'active'
+      user.permissions = 'none'
+    end
+
+    group.define :super_user do |user, machine|
+      user.permissions = 'super'
+    end
+  end
+</code></pre>
+
+This defines two machines, user and super_user, where super_user has all of the attributes of
+user but with a different permissions value.
+
+h3. use a machine
+
+Machines can be applied using one of three methods:
+
+<pre><code>
+  Machine(:car)           # creates an unsaved object using the machine 'car'.
+  Machine.build(:car)     # same as above.
+  Machine.build!(:car)    # creates an object using the 'car' machine and saves it.
+</code></pre>
+
+With each of these methods, a hash of replacement attributes can be passed, and those
+attributes will be used in place of the default ones defined in the machine.
+
+<pre><code>
+  Machine(:car, :make => 'Ferrari')
+</code></pre>
+  
+h3. associations
+
+Associations are filled using the machine object that is yielded in the block of the machine
+definition. Instances of other machines can be created by calling the object with the name of
+the machine.
+
+<pre><code>
+  Machine.define :garage do |garage, machine|
+    garage.car = machine.car
+  end
+</code></pre>
+
+Replacement attributes can be passed to the machine in order to specialize the instance
+for for a given association.
+
+<pre><code>
+  Machine.define :garage do |garage, machine|
+    garage.cars = [machine.car(:model => 'Thunderbird'), machine.car(:model => 'Mustang')]
+  end
+</code></pre>
+
+h3. sequences
+
+In cases where an attribute is required to be unique, sequences can be used. A sequence is
+defined as a block that takes as its argument a unique integer and returns a result.
+
+<pre><code>
+  Machine.sequence :vin do |n|
+    "abc123-#{n}"
+  end
+</code></pre>
+
+Sequences can then be used in machine definitions to set attribute values.
+
+<pre><code>
+  Machine.define :car do |car, machine|
+    car.vin = machine.next(:vin)
+    car.make = 'Honda'
+  end
+</code></pre>
+
+h1. license
 
 (The MIT License)
 
-Copyright (c) 2008 FIXME full name
+Copyright (c) 2008 Aubrey Holland and patch
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
