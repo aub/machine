@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.authors = ['Aubrey Holland', 'patch']
   s.description = %q{machine defines a factory system for creating model objects to replace fixtures in Ruby apps.}
   s.email = %q{aubrey@patch.com}
-  s.files = ['lib/machine', 'lib/machine/association_helper.rb', 'lib/machine/machine.rb', 'lib/machine/sequence.rb', 'lib/machine/version.rb', 'lib/machine.rb', 'machine.gemspec', 'rails/init.rb', 'Rakefile', 'README.textile', 'test/machine_test.rb', 'test/models.rb', 'test/sequence_test.rb', 'test/test.db', 'test/test_helper.rb', 'TODO.textile']
+  s.files = ['lib', 'lib/machine', 'lib/machine/association_helper.rb', 'lib/machine/machine.rb', 'lib/machine/machine_group.rb', 'lib/machine/sequence.rb', 'lib/machine.rb', 'machine-1.0.0.gem', 'machine.gemspec', 'rails', 'rails/init.rb', 'Rakefile', 'README.textile', 'test', 'test/machine_group_test.rb', 'test/machine_test.rb', 'test/models.rb', 'test/sequence_test.rb', 'test/test.db', 'test/test_helper.rb', 'TODO.textile']
   s.homepage = %q{http://github.com/aub/machine/tree/master}
   s.require_paths = ['lib']
   s.rubygems_version = %q{1.2.0}
