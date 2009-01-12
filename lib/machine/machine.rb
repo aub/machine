@@ -13,7 +13,6 @@ class Machine
   # "machines," "test/machines," and "spec/machines." Only the first
   # existing file will be loaded.
   cattr_accessor :definition_file_paths
-  self.definition_file_paths = %w(machines test/machines spec/machines)
   
   def self.find_definitions #:nodoc:
     definition_file_paths.each do |file_path|
