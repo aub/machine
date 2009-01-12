@@ -26,7 +26,7 @@ end
 
 spec = Gem::Specification.new do |s|
   s.name        = %q{machine}
-  s.version     = "1.0.0"
+  s.version     = "1.0.1"
   s.summary     = %q{machine defines a factory system for creating model objects to replace fixtures in Ruby apps.}
   s.description = %q{machine defines a factory system for creating model objects to replace fixtures in Ruby apps.}
 
