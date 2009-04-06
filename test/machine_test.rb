@@ -288,5 +288,13 @@ class MachineTest < Test::Unit::TestCase
       assert_equal 'fun', article.title
       assert !article.new_record?
     end
+
+    should 'use the block in the shorthand version of build' do
+      article = Machine(:article) do |article|
+        article.title = 'another one'
+      end
+      assert_equal 'another one', article.title
+      assert article.new_record?
+    end
   end
 end
