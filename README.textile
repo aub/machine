@@ -91,6 +91,15 @@ attributes will be used in place of the default ones defined in the machine.
   Machine(:car, :make => 'Ferrari')
 </code></pre>
   
+In addition, a block can be passed and it will be called with the newly created
+object as an argument.
+
+<pre><code>
+  Machine(:car) do |car|
+    car.make = 'Ferrari'
+  end
+</code></pre>
+
 h3. associations
 
 Associations are filled using the machine object that is yielded in the block of the machine
