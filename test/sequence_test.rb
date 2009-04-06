@@ -2,6 +2,10 @@ require File.dirname(__FILE__) + '/test_helper.rb'
 
 class SequenceTest < Test::Unit::TestCase
   
+  def setup
+    Machine.sequences.clear
+  end
+
   should 'allow definition of sequences' do
     Machine.sequence :thing do
     end

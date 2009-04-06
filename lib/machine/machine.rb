@@ -12,8 +12,12 @@ class Machine
   # machine definitions. By default, machine will attempt to require
   # "machines," "test/machines," and "spec/machines." Only the first
   # existing file will be loaded.
-  cattr_accessor :definition_file_paths
+  class << self
+    attr_accessor :definition_file_paths
+  end
   
+  @definition_file_paths = %w(machines test/machines spec/machines)
+
   def self.find_definitions #:nodoc:
     definition_file_paths.each do |file_path|
       begin
@@ -95,17 +99,22 @@ class Machine
   #   attributes: (Hash)
   #     A set of attributes to use as a replacement for the default ones provided by
   #     the machine.
+  #   block: (Proc, optional)
+  #     If a block is passed to the function, it will attempt to call the block with
+  #     the newly created object as an argument so that manual initialization can be
+  #     done. This can be used in combination with or instead of passing an attributes hash.
   #
   # Example
   #
   #   Machine.build(:car, :model => 'Civic', :make => 'Honda')
-  def self.build(name, attributes={})
+  def self.build(name, attributes={}, &block)
     machines = machines_for(name)
     raise MachineNotFoundError if machines.empty?
     object = machines.shift.build(attributes)
     while machine = machines.shift
       machine.apply_to(object, attributes)
     end
+    block.call(object) if block_given?
     object
   end
 
@@ -117,12 +126,16 @@ class Machine
   #   attributes: (Hash)
   #     A set of attributes to use as a replacement for the default ones provided by
   #     the machine.
+  #   block: (Proc, optional)
+  #     If a block is passed to the function, it will attempt to call the block with
+  #     the newly created object as an argument so that manual initialization can be
+  #     done. This can be used in combination with or instead of passing an attributes hash.
   #
   # Example
   #
   #   Machine.build!(:car, :model => 'Civic', :make => 'Honda')  
-  def self.build!(name, attributes={})
-    result = build(name, attributes)
+  def self.build!(name, attributes={}, &block)
+    result = build(name, attributes, &block)
     result.save! if result.respond_to?(:save!)
     result
   end
@@ -187,7 +200,8 @@ class Machine
   #     address.street = machine.next(:street)
   #   end
   def self.next(sequence)
-    sequences[sequence].next if sequences.has_key?(sequence)
+    raise MachineNotFoundError unless sequences.has_key?(sequence)
+    sequences[sequence].next
   end
   
   def initialize(name, options, proc) #:nodoc

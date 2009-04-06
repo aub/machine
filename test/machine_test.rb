@@ -266,4 +266,27 @@ class MachineTest < Test::Unit::TestCase
     end
   end
   
+  context 'with blocks on create' do
+    setup do
+      Machine.define :article do |article, machine|
+        article.title = 'aha'
+      end
+    end
+
+    should 'use a passed block in create to initialize objects' do
+      article = Machine.build(:article) do |article|
+        article.title = 'heck'
+      end
+      assert_equal 'heck', article.title
+    end
+
+    should 'use a passed block when creating with build!' do
+      article = Machine.build!(:article) do |article|
+        article.title = 'fun'
+        assert article.new_record?
+      end
+      assert_equal 'fun', article.title
+      assert !article.new_record?
+    end
+  end
 end
