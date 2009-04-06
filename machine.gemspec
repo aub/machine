@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.version = '1.0.1'
+  s.version = '1.0.2'
   s.date = %q{2008-11-07}
  
   s.name = %q{machine}
