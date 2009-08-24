@@ -7,3 +7,9 @@ require 'machine/sequence'
 def Machine(name, attributes={}, &block)
   Machine.build(name, attributes, &block)
 end
+
+# And the same drill for building a machine and saving the result.
+def Machine!(name, attributes={}, &block)
+  Machine.build!(name, attributes, &block)
+end
+

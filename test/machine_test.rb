@@ -193,7 +193,7 @@ class MachineTest < Test::Unit::TestCase
     end
   end
 
-  context "using the helper method" do
+  context "using the helper methods" do
     setup do
       Machine.define :article do |article, machine|
         article.title = 'aha'
@@ -214,6 +214,27 @@ class MachineTest < Test::Unit::TestCase
     
     should "not save the object" do
       assert Machine(:article).new_record?
+    end
+    
+    should "apply Machine! correctly" do
+      assert Machine!(:article).instance_of?(Article)
+    end
+    
+    should "set the attributes" do
+      assert_equal 'aha', Machine!(:article).title
+    end
+    
+    should "allow replacement attributes" do
+      assert_equal 'ooh', Machine!(:article, :title => 'ooh').title
+    end
+    
+    should "save the object" do
+      assert !Machine!(:article).new_record?
+    end
+
+    should "take a block to set attributes" do
+      assert_equal 'big fun', Machine(:article) { |obj| obj.title = 'big fun' }.title
+      assert_equal 'big fun', Machine!(:article) { |obj| obj.title = 'big fun' }.title
     end
   end
   

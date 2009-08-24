@@ -1,0 +1,3 @@
+== 1.0.3 2009-08-24
+* Add Machine!() as a shortcut for Machine.build!()
+* Add tests for taking blocks in the shortcut methods

@@ -1,8 +1,6 @@
 h1. machine
 
-Machine is a factory tool designed for a fixture replacement in Rails applications. It borrows a few concepts
-from "factory_girl":http://github.com/thoughtbot/factory_girl/tree/master but applies attributes to objects
-differently and has a different concept for associations.
+Machine is a factory tool designed for a fixture replacement in Rails applications. It borrows a few concepts from "factory_girl":http://github.com/thoughtbot/factory_girl/tree/master but applies attributes to objects differently and has a different concept for associations.
 
 Written by "Aubrey Holland":mailto:aubreyholland@gmail.com.
 
